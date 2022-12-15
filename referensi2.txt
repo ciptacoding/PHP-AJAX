@@ -1,0 +1,240 @@
+<?php include 'layouts/header.php'; ?>
+	<?php include 'layouts/navbar.php'; ?>
+	<div class="container mt-4">
+		<div class="row mb-4">
+			<div class="col-md">
+				<div class="card">
+				  <div class="card-header">
+				    List Data Mahasiswa
+				  </div>
+				  <div class="card-body p-0">
+				  	<div id="list-data"></div>
+				  </div>
+				</div>
+			</div>
+			<div class="col-md">
+				<div id="notif"></div>
+				<div class="card">
+				  <div class="card-header">
+				    Form Tambah Mahasiswa
+				  </div>
+				  <div class="card-body">
+				  	<form id="form" enctype="multipart/form-data">
+				  		<input type="hidden" id="id" name="id">
+				    	<input type="hidden" id="fotoLama" name="fotoLama">
+				  		<div class="form-group">
+						    <label for="nama">Nama</label>
+						    <input type="text" class="form-control" id="nama" name="nama">
+						  </div>
+				  		<div class="form-group">
+						    <label for="nim">Nim</label>
+						    <input type="text" class="form-control" id="nim" name="nim">
+						  </div>
+				  		<div class="form-group">
+						    <label for="email">Email</label>
+						    <input type="text" class="form-control" id="email" name="email">
+						  </div>
+						  <div class="form-group">
+						    <label for="jurusan">Jurusan</label>
+						    <select class="form-control" id="jurusan" name="jurusan">
+						      <option disabled selected value>Choose One</option>
+						      <option value="Sistem Informasi">Sistem Informasi</option>
+						      <option value="Sistem Komputer">Sistem Komputer</option>
+						      <option value="Manajemen Informatika">Manajemen Informatika</option>
+						      <option value="Teknologi Informasi">Teknologi Informasi</option>
+						      <option value="Bisnis Digial">Bisnis Digial</option>
+						    </select>
+						  </div>
+						  <div class="form-group">
+						  	<label for="foto">Foto</label>
+						  	<div class="custom-file">
+								  <input type="file" class="custom-file-input" id="foto" name="foto">
+								  <label class="custom-file-label" for="foto">Choose file</label>
+								</div>
+						  </div>
+						  <button type="submit" id="submit-btn" class="btn btn-primary">Submit</button>
+						  <button type="submit" id="update-btn" class="btn btn-success">Update</button>
+						  <button type="reset" id="reset-btn" class="btn btn-secondary">Reset</button>
+				  	</form>
+				  </div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Modal -->
+	<div class="modal fade" id="detailMahasiswaModal" tabindex="-1" aria-labelledby="detailMahasiswaModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <h5 class="modal-title" id="detailMahasiswaModalLabel">Detail Mahasiswa</h5>
+	        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	          <span aria-hidden="true">&times;</span>
+	        </button>
+	      </div>
+	      <div class="modal-body"></div>
+	      <div class="modal-footer">
+	        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+	        <button type="button" class="btn btn-primary">Save changes</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+	<?php include 'layouts/js.php'; ?>
+	<script>
+		$(function(){
+			$("#update-btn").hide();
+
+			// Get all of the data
+			function loadData() {
+				// $("#list-data").load("ajax/mahasiswa.php");
+
+				// $.get("ajax/mahasiswa.php", function(data) {
+				// 	$("#list-data").html(data);
+				// });
+
+				$.ajax({
+					url: 'ajax/mahasiswa.php',
+					type: 'get',
+					success: function (result) {
+						$("#list-data").html(result);
+					}
+				});
+			}
+			loadData();
+
+
+			// Insert data
+			$('#form').on('submit', function(e) {
+				e.preventDefault();
+
+				// $.post("ajax/simpan.php", $(this).serialize(), function(result) {
+				// 	$("#notif").html(result);
+				// 	loadData();
+				// });
+
+				// var form = $('#form')[0];
+				// var data = new FormData(form);
+				$.ajax({
+					url: 'ajax/simpan.php',
+					type: 'post',
+					enctype: 'multipart/form-data',
+					data: new FormData(this),
+					processData: false,
+					contentType: false,
+					cache: false,
+					success: function(data) {
+          	$("#notif").html(data);
+          	loadData();
+          	reset();
+          }
+				});
+			});
+
+			$(document).on('click', '.detailBtn', function(e) {
+				e.preventDefault();
+				$.ajax({
+					url: 'ajax/detail-mahasiswa.php',
+					method: 'get',
+					data: {id: $(this).data('id')},
+					success: function(result) {
+						$('.modal-body').html(result);
+					}
+				});
+			});
+
+			$("#list-data").on('click', '.editBtn', function(e) {
+				e.preventDefault();
+
+				$("#update-btn").show();
+				$("#submit-btn").hide();
+
+				$.ajax({
+					url: 'ajax/edit.php',
+					method: 'get',
+					data: {id: $(this).data('id')},
+					dataType: 'json',
+					success: function(result) {
+						$("#id").val(result.id);
+						$("#fotoLama").val(result.foto);
+						$("#nim").val(result.nim);
+						$("#nama").val(result.nama);
+						$("#email").val(result.email);
+						$("#jurusan").val(result.jurusan);
+					}
+				});
+			});
+
+			$("#update-btn").click(function(e) {
+				e.preventDefault();
+				var form = $('#form')[0];
+				var data = new FormData(form);
+				$.ajax({
+					url: 'ajax/update.php',
+					type: 'post',
+					data: data,
+					enctype: 'multipart/form-data',
+					processData: false,
+					contentType: false,
+					cache: false,
+					success: function(data) {
+          	$("#notif").html(data);
+          	loadData();
+          	reset();
+          }
+				});
+			});
+
+			$("#list-data").on('click', '.deleteBtn', function(e) {
+				e.preventDefault();
+				if (confirm('Yakin?')) {
+					$.ajax({
+						url: 'ajax/hapus.php',
+						method: 'get',
+						data: {id: $(this).data('id')},
+						success: function(result) {
+							alert(result);
+							loadData();
+						}
+					});
+				}
+			});
+
+			function reset() {
+				$("#id").val('');
+				$("#fotoLama").val('');
+				$("#nim").val('');
+				$("#nama").val('');
+				$("#email").val('');
+				$("#jurusan").val('');
+				$("#update-btn").hide();
+				$("#submit-btn").show();
+			}
+
+			$("#reset-btn").click(function() {
+				reset();	
+			});
+
+		});
+	</script>
+<?php include 'layouts/footer.php'; ?>
+
+<!-- Reference
+https://www.cloudways.com/blog/the-basics-of-file-upload-in-php/
+https://phppot.com/jquery/jquery-ajax-image-upload/
+http://codingan.com/upload-file-menggunakan-ajax-jquery-dan-php/
+https://makitweb.com/how-to-upload-image-file-using-ajax-and-jquery/
+https://stackoverflow.com/questions/23980733/jquery-ajax-file-upload-php
+
+https://www.maribelajarcoding.com/2019/12/crud-php-ajax-sederhana.html
+https://www.maribelajarcoding.com/2019/05/upload-gambar-dengan-ajax-php-dan-mysql.html
+https://codewithawa.com/posts/ajax-crud-%5Bcreate-update-delete%5D-with-php-and-mysql-database
+https://www.malasngoding.com/input-data-ke-database-tanpa-reload-dengan-ajax-jquery/
+https://www.malasngoding.com/membuat-halaman-web-ajax-tanpa-reload-dengan-jquery/
+https://www.yudana.id/membuat-aplikasi-crud-sederhana-ajax-jquery-php-mysql/
+
+https://www.w3schools.com/jquery/jquery_ref_ajax.asp
+https://www.w3schools.com/jquery/ajax_ajax.asp
+https://www.w3schools.com/jquery/ajax_get.asp
+https://www.w3schools.com/jquery/ajax_post.asp
+-->

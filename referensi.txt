@@ -1,0 +1,225 @@
+const listData = document.querySelector('#list-data');
+const formMahasiswa = document.querySelector('#formMahasiswa');
+const btnTambah = document.querySelector('#btnTambah');
+const btnUpdate = document.querySelector('#btnUpdate');
+const btnReset = document.querySelector('#btnReset');
+
+btnUpdate.classList.add('d-none');
+btnReset.classList.add('d-none');
+
+function loadData() {
+	const xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			listData.innerHTML = this.responseText;
+		}
+	}
+
+	xhr.open('GET', 'ajax/mahasiswa.php', true);
+	xhr.send();
+}
+
+function reset(form) {
+	form.id.value = "";
+	form.nama.value = "";
+	form.nim.value = "";
+	form.email.value = "";
+	form.jurusan.value = "";
+	form.fotoLama.value = "";
+}
+
+window.addEventListener('load', loadData);
+window.addEventListener('click', function(e) {
+	e.preventDefault();
+	if (e.target.classList.contains('detailBtn')) {
+		const xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				document.querySelector('.modal-body').innerHTML = this.responseText;
+			}
+		}
+
+		xhr.open('GET', 'ajax/detail-mahasiswa.php?id=' + e.target.dataset.id, true);
+		xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhr.send();
+	} else if (e.target.classList.contains('editBtn')) {
+		let cardHeader = document.querySelector('.card-header');
+		cardHeader.innerHTML = 'Update Mahasiswa';
+		// btnTambah.classList.replace('btn-primary', 'btn-success');
+		// btnTambah.innerHTML = 'Update';
+		btnUpdate.classList.remove('d-none');
+		btnReset.classList.remove('d-none');
+		btnTambah.classList.add('d-none');
+
+		const xhr = new XMLHttpRequest();
+		xhr.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				const res = JSON.parse(this.responseText);
+				// document.getElementById('id').value = res.id;
+				formMahasiswa.id.value = res.id;
+				formMahasiswa.nama.value = res.nama;
+				formMahasiswa.nim.value = res.nim;
+				formMahasiswa.email.value = res.email;
+				formMahasiswa.jurusan.value = res.jurusan;
+				formMahasiswa.fotoLama.value = res.foto;
+			}
+		}
+
+		xhr.open('GET', 'ajax/edit.php?id=' + e.target.dataset.id, true);
+		xhr.send();
+
+	} else if (e.target.classList.contains('deleteBtn')) {
+		alert(e.target.dataset.id);
+	}
+});
+
+btnUpdate.addEventListener('click', function(e) {
+	e.preventDefault();
+
+	var data = new FormData();
+	data.append('id', document.getElementById('id').value);
+	data.append('nama', document.getElementById('nama').value);
+	data.append('nim', document.getElementById('nim').value);
+	data.append('email', document.getElementById('email').value);
+	data.append('jurusan', document.getElementById('jurusan').value);
+	data.append('fotoLama', document.getElementById('fotoLama').value);
+	data.append('foto', document.getElementById('foto').files[0]);
+
+	const xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() {
+		if (this.readyState == 4 && this.status == 200) {
+			const res = JSON.parse(this.responseText);
+			if (res.ok) {
+				alert('updated');
+				loadData();
+			} else {
+				let alertMsg = document.createElement('div');
+				alertMsg.className = "alert alert-danger";
+				res.errors.forEach(function(error, i) {
+					let pMsg = document.createElement('p');
+					pMsg.className = 'mb-0';
+					node= document.createTextNode(error);
+					pMsg.appendChild(node);
+					alertMsg.appendChild(pMsg);
+				});
+				const cardBody = document.getElementById('card-body');
+				cardBody.prepend(alertMsg);
+			}
+		}
+	}
+
+	xhr.open('POST', 'ajax/update.php', true);
+	xhr.send(data);
+});
+
+btnReset.addEventListener('click', function() {
+	let cardHeader = document.querySelector('.card-header');
+	cardHeader.innerHTML = 'Tambah Mahasiswa';
+	// btnTambah.classList.replace('btn-success', 'btn-primary');
+	// btnTambah.innerHTML = 'Tambah';
+	btnUpdate.classList.add('d-none');
+	btnReset.classList.add('d-none');
+	btnTambah.classList.remove('d-none');
+	reset(document.getElementById('formMahasiswa'));
+});
+
+// formMahasiswa.addEventListener('submit', e => { // simpan tanpa upload
+// 	e.preventDefault();
+// 	nama = document.getElementById('nama').value;
+// 	nim = document.getElementById('nim').value;
+// 	email = document.getElementById('email').value;
+// 	jurusan = document.getElementById('jurusan').value;
+// 	const xhr = new XMLHttpRequest();
+// 	xhr.onreadystatechange = () => {
+// 		if (xhr.readyState == 4 && xhr.status == 200) {
+// 			document.getElementById('p').innerHTML = xhr.responseText;
+// 		}
+// 	}
+// 	xhr.open('POST', 'ajax/simpan.php', true);
+// 	xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+// 	xhr.send('nama='+nama+'&nim='+nim+'&email='+email+'&jurusan='+jurusan);
+// });
+
+formMahasiswa.addEventListener('submit', function(e) {
+	e.preventDefault();
+
+	var data = new FormData();
+	data.append('nama', document.getElementById('nama').value);
+	data.append('nim', document.getElementById('nim').value);
+	data.append('email', document.getElementById('email').value);
+	data.append('jurusan', document.getElementById('jurusan').value);
+	data.append('foto', document.getElementById('foto').files[0]);
+
+	// nama = e.target.nama.value; /
+	// nama = formMahasiswa.nama.value; /
+	// nama = document.getElementById('nama').value;
+	// nim = document.getElementById('nim').value;
+	// email = document.getElementById('email').value;
+	// password = document.getElementById('password').value;
+
+	const xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function() { // with param res
+		if (this.readyState == 4 && this.status == 200) {
+			// res.target.response
+			// res.target.responseText
+			// document.getElementById('p').innerHTML = this.response;
+			// document.getElementById('p').innerHTML = this.responseText;
+			const res = JSON.parse(this.responseText);
+			if (res.ok) {
+				alert('inserted');
+				loadData();
+			} else {
+				let alertMsg = document.createElement('div');
+				alertMsg.className = "alert alert-danger";
+				res.errors.forEach(function(error, i) {
+					let pMsg = document.createElement('p');
+					pMsg.className = 'mb-0';
+					node	= document.createTextNode(error);
+					pMsg.appendChild(node);
+					// alertMsg.prepend(pMsg);
+					alertMsg.appendChild(pMsg);
+				});
+				const formCard = document.getElementById('form-card');
+				const cardBody = document.getElementById('card-body');
+				cardBody.prepend(alertMsg);
+			}
+		}
+	}
+
+	xhr.open('POST', 'ajax/simpan.php', true);
+	xhr.send(data);
+});
+
+/* JS info
+--------------------------------------
+- https://flaviocopes.com/javascript-loops/
+- https://javascript.info/
+- https://stackoverflow.com/questions/14379274/how-to-iterate-over-a-javascript-object
+*/
+
+/* Refrence Crud Img Ajax Native:
+--------------------------------------
+- https://www.w3schools.com/xml/ajax_intro.asp
+- http://adnan-tech.com/live-crud-with-ajax-php/
+- https://github.com/ibnrawaha/Ajax
+------------------------------------*/
+
+/* Refrence Upload Img Ajax Native:
+--------------------------------------
+- https://usefulangle.com/post/67/pure-javascript-ajax-file-upload-showing-progess-percent
+- http://igstan.ro/posts/2009-01-11-ajax-file-upload-with-pure-javascript.html
+- https://codepen.io/tcannonfodder/pen/QjpMoL
+- https://www.cloudways.com/blog/the-basics-of-file-upload-in-php/
+- https://makitweb.com/how-to-upload-image-file-using-ajax-and-jquery/
+- https://sekolahkoding.com/forum/mau-tanya-tentang-upload-image-plus-insert-data-dengan-php-jquery-ajax
+- https://phppot.com/php/php-ajax-image-upload/
+- https://www.formget.com/ajax-image-upload-php/
+- https://code.tutsplus.com/id/tutorials/uploading-files-with-ajax--net-21077
+- https://uploadcare.com/blog/file-upload-ajax/
+- https://www.mynotescode.com/cara-membuat-upload-gambar-dengan-php-ajax-dan-mysql/
+- https://code-boxx.com/php-ajax-image-upload/
+- https://stackoverflow.com/questions/34548995/how-to-upload-file-using-pure-vanilla-javascript-and-php
+- https://stackoverflow.com/questions/34548995/how-to-upload-file-using-pure-vanilla-javascript-and-php
+- https://developer.mozilla.org/en-US/docs/Web/API/FormData/Using_FormData_Objects
+- https://javascript.info/formdata
+--------------------------------------*/
